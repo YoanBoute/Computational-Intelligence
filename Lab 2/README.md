@@ -17,3 +17,9 @@ When opposed to the optimal strategy, this strategy is usually 5 times more effi
 
 This strategy is not absolutely optimal, because it would be even more efficient if it computed not only one move, but the whole game in advance. However, such a strategy would require exponential computation time, and couldn't be implemented in reasonable time. Hence, for practical reasons, the optimal_rule_based3 strategy will be considered as the best possible strategy in the next steps.
 
+## 2. Evolutionary agent
+
+The evolutionary agent is supposed to be based on a set of rules and actions that have evolved to maximize a fitness, which is the win rate when put against an optimal rule-based strategy.
+
+*Evolutionary_Agent1 :* This first class is the basis of the evolutionary agent, with a very small set of arbitrary rules, whose thresholds and subsequent actions can evolve. The mutations of those rules is made using Gaussian mutations with fixed variances. Once mutated, all the numbers involved are transformed back into int, as the rules don't need floating points thresholds, and the actions involve two integers. An additional check is also made to prevent those values from going out of the valid range given by a specific nim state (for example, a mutation can't result in a rule with an action on a line that doesn't exist in the nim state).
+This very simple agent was designed to begin with the evolutionary strategies, and is very unefficient, with a fitness of 0 because of the number of rules he can change. In the following models, we will focus on these rules.
