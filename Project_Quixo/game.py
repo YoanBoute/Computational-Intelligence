@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from enum import Enum
+from typing import Any
 import numpy as np
 
 # Rules on PDF and https://cdn.1j1ju.com/medias/a8/5e/26-quixo-rulebook.pdf
@@ -174,6 +175,104 @@ class Game(object):
             # pick the cube without face or with player's face and put it at the top on the same column and push the other cubes downwards
             self._board[:, axis_1] = np.concatenate(
                 (self._board[axis_0, axis_1], self._board[:axis_0, axis_1], self._board[axis_0 + 1 :, axis_1]),
+                axis=None,
+            )
+        return True
+
+
+
+'''Class created to handle more easily slides (to compute successors)'''
+class Board() :
+    def __init__(self, board = None) -> None:
+        self.board = board if board is not None else np.full((5,5), -1, dtype=np.int8)
+        self.shape = board.shape
+
+    def __getitem__(self, key) -> Any:
+        return self.board[key]
+    
+    def __setitem__(self, key, value) :
+        self.board[key] = value
+
+    def check_winner(self) -> int:
+        '''Check the winner. Returns the player ID of the winner if any, otherwise returns -1'''
+        # for each row
+        winner = -1
+        for x in range(self.board.shape[0]):
+            # if a player has completed an entire row
+            if self.board[x, 0] != -1 and all(self.board[x, :] == self.board[x, 0]):
+                # return winner is this guy
+                winner = self.board[x, 0]
+        if winner > -1 and winner != self.get_current_player():
+            return winner
+        # for each column
+        for y in range(self.board.shape[1]):
+            # if a player has completed an entire column
+            if self.board[0, y] != -1 and all(self.board[:, y] == self.board[0, y]):
+                # return the relative id
+                winner = self.board[0, y]
+        if winner > -1 and winner != self.get_current_player():
+            return winner
+        # if a player has completed the principal diagonal
+        if self.board[0, 0] != -1 and all(
+            [self.board[x, x] for x in range(self.board.shape[0])] == self.board[0, 0]
+        ):
+            # return the relative id
+            winner = self.board[0, 0]
+        if winner > -1 and winner != self.get_current_player():
+            return winner
+        # if a player has completed the secondary diagonal
+        if self.board[0, -1] != -1 and all(
+            [self.board[x, -(x + 1)] for x in range(self.board.shape[0])] == self.board[0, -1]
+        ):
+            # return the relative id
+            winner = self.board[0, -1]
+        return winner
+    
+    def acceptable_slides(self, from_position: tuple[int, int]):
+        """When taking a piece from {from_position} returns the possible moves (slides)"""
+        acceptable_slides = [Move.BOTTOM, Move.TOP, Move.LEFT, Move.RIGHT]
+        axis_0 = from_position[0]  # axis_0 = 0 means uppermost row
+        axis_1 = from_position[1]  # axis_1 = 0 means leftmost column
+
+        if axis_0 == 0:  # can't move upwards if in the top row...
+            acceptable_slides.remove(Move.TOP)
+        elif axis_0 == 4:
+            acceptable_slides.remove(Move.BOTTOM)
+
+        if axis_1 == 0:
+            acceptable_slides.remove(Move.LEFT)
+        elif axis_1 == 4:
+            acceptable_slides.remove(Move.RIGHT)
+        return acceptable_slides
+    
+    def slide(self, from_pos: tuple[int, int], slide: Move) -> bool:
+        '''Slide the other pieces'''
+        if slide not in self.acceptable_slides(from_pos):
+            return False  # consider raise ValueError('Invalid argument value')
+        axis_0, axis_1 = from_pos
+
+        if slide == Move.RIGHT:
+            # pick the cube without face or with player's face and put it on the far right of the same row and push the other cubes on the left
+            self.board[axis_0] = np.concatenate(
+                (self.board[axis_0, :axis_1], self.board[axis_0, axis_1 + 1 :], self.board[axis_0, axis_1]),
+                axis=None,
+            )
+        elif slide == Move.LEFT:
+            # pick the cube without face or with player's face and put it on the far left of the same row and push the other cubes on the right
+            self.board[axis_0] = np.concatenate(
+                (self.board[axis_0, axis_1], self.board[axis_0, :axis_1], self.board[axis_0, axis_1 + 1 :]),
+                axis=None,
+            )
+        elif slide == Move.BOTTOM:
+            # pick the cube without face or with player's face and put it at the bottom on the same column and push the other cubes upwards
+            self.board[:, axis_1] = np.concatenate(
+                (self.board[:axis_0, axis_1], self.board[axis_0 + 1 :, axis_1], self.board[axis_0, axis_1]),
+                axis=None,
+            )
+        elif slide == Move.TOP:
+            # pick the cube without face or with player's face and put it at the top on the same column and push the other cubes downwards
+            self.board[:, axis_1] = np.concatenate(
+                (self.board[axis_0, axis_1], self.board[:axis_0, axis_1], self.board[axis_0 + 1 :, axis_1]),
                 axis=None,
             )
         return True
