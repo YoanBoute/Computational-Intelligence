@@ -202,7 +202,7 @@ class Board() :
             if self.board[x, 0] != -1 and all(self.board[x, :] == self.board[x, 0]):
                 # return winner is this guy
                 winner = self.board[x, 0]
-        if winner > -1 and winner != self.get_current_player():
+        if winner > -1 :
             return winner
         # for each column
         for y in range(self.board.shape[1]):
@@ -210,7 +210,7 @@ class Board() :
             if self.board[0, y] != -1 and all(self.board[:, y] == self.board[0, y]):
                 # return the relative id
                 winner = self.board[0, y]
-        if winner > -1 and winner != self.get_current_player():
+        if winner > -1 :
             return winner
         # if a player has completed the principal diagonal
         if self.board[0, 0] != -1 and all(
@@ -218,7 +218,7 @@ class Board() :
         ):
             # return the relative id
             winner = self.board[0, 0]
-        if winner > -1 and winner != self.get_current_player():
+        if winner > -1 :
             return winner
         # if a player has completed the secondary diagonal
         if self.board[0, -1] != -1 and all(
