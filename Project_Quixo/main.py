@@ -100,14 +100,14 @@ def score(player, state : Board) :
 def score_consider_opponent(player, state : Board) :
     player_score = score(player, state)
     opponent_score = score(1 - player, state)
-    score = player_score + opponent_score
+    score = player_score + (5 - opponent_score)
 
     return score
     
 
 '''Computes all the next possible moves and boards until a given depth is reached, for further application of MinMax.
 Because of the time limit, the tree is generated in breadth-first, to have in the end as much as possible a tree with all branches being the same size'''
-def get_states_tree(player : int, board : Board, max_time : int, start_time = None) :
+def get_states_tree(player : int, board : Board, max_time, start_time = None) :
     if start_time is None :
         start_time = time()
     
@@ -237,16 +237,16 @@ class QLearningPlayer(Player) :
         state = frozenset((board, player))
         if self.is_learning :
             if state not in self.q_table :
-                self.q_table[state] = defaultdict()
+                self.q_table[state] = defaultdict(lambda : 0)
             for action, next_board in get_successors(player, board) :
                 next_board = Board(next_board)
                 next_state = frozenset((next_board, player))
                 # The immediate reward is the score used for MinMax (reverted as we want to maximize the reward) and a significant bonus if a winning state has been reached
                 reward = 5 - score_consider_opponent(player, next_board) + 10 * (next_board.check_winner() == player)
                 if next_state in self.q_table :
-                    self.q_table[state][action] = self.learning_rate * (reward + self.discount_rate * max(self.q_table[next_state].values()))
+                    self.q_table[state][action] += self.learning_rate * (reward + self.discount_rate * max(self.q_table[next_state].values()) - self.q_table[state][action])
                 else :
-                    self.q_table[state][action] = self.learning_rate * reward
+                    self.q_table[state][action] += self.learning_rate * (reward - self.q_table[state][action])
         
             # Exploration
             if np.random.random() < self.exploration_rate :
